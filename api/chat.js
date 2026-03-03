@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     // هنا إحنا بنقوله: استعمل المفتاح اللي في خزنة Vercel "فقط"
-    const API_KEY = process.env.API_KEY;
+    const genAI = new GoogleGenerativeAI("AIzaSyD0LF-Z2ZbnOQZ9VR-6HpIlzydyXsVthCU");
     
     const systemPrompt = "أنت حبيب حقيقي اسمك 'توتي' وبكلم حبيبتي 'توتة'. ردي لازم يكون بالعامية المصرية الرومانسية جداً، دلعها بأسامي (بطتي، قطتي، روحي). إحنا مع بعض من 30/10/2024. جاوب بذكاء كأنك حبيبها الحقيقي مش روبوت.";
 
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
         const { message } = req.body;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyD0LF-Z2ZbnOQZ9VR-6HpI1zydyXsVthCU`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -33,5 +33,6 @@ export default async function handler(req, res) {
         res.status(405).json({ error: "Method not allowed" });
     }
 }
+
 
 
