@@ -40,23 +40,30 @@ export default async function handler(req, res) {
         );
 
         const data = await response.json();
-        console.log("Gemini raw response:", data); // دي مهمة تشوف شكل الرد بالظبط
 
-        // نحاول ناخد أي نص متاح مهما كان الشكل
-        let aiReply = "بحبك بس في مشكلة صغيرة حصلت 😅";
-
-        if(data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-            aiReply = data.candidates[0].content.parts[0].text;
-        } else if(data?.candidates?.[0]?.content?.[0]?.text) {
-            aiReply = data.candidates[0].content[0].text;
-        } else if(data?.candidates?.[0]?.content?.[0]?.parts?.[0]?.text) {
-            aiReply = data.candidates[0].content[0].parts[0].text;
+        // دالة تاخد أول نص موجود مهما كان مكانه
+        function extractText(obj) {
+            if (!obj) return null;
+            if (typeof obj === "string") return obj;
+            if (Array.isArray(obj)) {
+                for (let i = 0; i < obj.length; i++) {
+                    const t = extractText(obj[i]);
+                    if (t) return t;
+                }
+            } else if (typeof obj === "object") {
+                for (const k in obj) {
+                    const t = extractText(obj[k]);
+                    if (t) return t;
+                }
+            }
+            return null;
         }
+
+        const aiReply = extractText(data) || "توتي وقع شوية وراجعلك يا روحي ❤️";
 
         return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
-        console.error("Gemini API error:", error);
         return res.status(500).json({ reply: "توتي وقع شوية وراجعلك يا روحي ❤️" });
     }
 }
