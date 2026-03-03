@@ -20,8 +20,9 @@ export default async function handler(req, res) {
 `;
 
     try {
+        // حط هنا المفتاح بتاعك بدل YOUR_API_KEY
         const response = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyD0LF-Z2ZbnOQZ9VR-6HpIlzydyXsVthCU",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAQQwIY0AiVn3kzt4XzSLp8KKJ0xpkvFj8",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -41,7 +42,6 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        // دالة تاخد أول نص موجود مهما كان مكانه
         function extractText(obj) {
             if (!obj) return null;
             if (typeof obj === "string") return obj;
