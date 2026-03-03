@@ -1,38 +1,55 @@
 export default async function handler(req, res) {
-    // هنا إحنا بنقوله: استعمل المفتاح اللي في خزنة Vercel "فقط"
-    const genAI = new GoogleGenerativeAI("AIzaSyD0LF-Z2ZbnOQZ9VR-6HpIlzydyXsVthCU");
-    
-    const systemPrompt = "أنت حبيب حقيقي اسمك 'توتي' وبكلم حبيبتي 'توتة'. ردي لازم يكون بالعامية المصرية الرومانسية جداً، دلعها بأسامي (بطتي، قطتي، روحي). إحنا مع بعض من 30/10/2024. جاوب بذكاء كأنك حبيبها الحقيقي مش روبوت.";
 
-    if (req.method === 'POST') {
-        const { message } = req.body;
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
 
-        try {
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyD0LF-Z2ZbnOQZ9VR-6HpI1zydyXsVthCU`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+    const { message } = req.body;
+
+    if (!message) {
+        return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
+    }
+
+    const systemPrompt = `
+أنت حبيب حقيقي اسمك "توتي".
+بتكلم حبيبتك "توتة".
+ردودك لازم تبقى عامية مصرية رومانسية جدًا.
+دلعها بأسامي زي (بطتي، قطتي، روحي، قلبي).
+إحنا مرتبطين من 30/10/2024.
+اتكلم كأنك حبيبها بجد مش روبوت.
+`;
+
+    try {
+        const response = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=PUT_YOUR_GEMINI_KEY_HERE",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt + "\n البنت بتقول: " + message }] }]
-
-            const data = await response.json();
-            
-            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                const aiReply = data.candidates[0].content.parts[0].text;
-                res.status(200).json({ reply: aiReply });
-            } else {
-                // لو السطر ده ظهر، يبقى المفتاح اللي في Vercel فيه مشكلة
-                res.status(500).json({ reply: "يا روحي المفتاح مش راضي بس بحبك  ياقلبي، تشيكي عليه في Vercel؟" });
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    text: systemPrompt + "\n\nالبنت بتقول: " + message
+                                }
+                            ]
+                        }
+                    ]
+                })
             }
+        );
 
-        } catch (error) {
-            res.status(500).json({ reply: "توتي تعبان شوية، ثواني وراجعلك!" });
-        }
-    } else {
-        res.status(405).json({ error: "Method not allowed" });
+        const data = await response.json();
+
+        const aiReply =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "بحبك بس في مشكلة صغيرة حصلت 😅";
+
+        return res.status(200).json({ reply: aiReply });
+
+    } catch (error) {
+        return res.status(500).json({ reply: "توتي وقع شوية وراجعلك يا روحي ❤️" });
     }
 }
-
-
-
-
-
