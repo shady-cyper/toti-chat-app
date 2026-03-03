@@ -12,8 +12,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: systemPrompt + "\n الرسالة: " + message }] }]
-            });
+        contents: [{ parts: [{ text: systemPrompt + "\n البنت بتقول: " + message }] }]
 
             const data = await response.json();
             
@@ -22,7 +21,7 @@ export default async function handler(req, res) {
                 res.status(200).json({ reply: aiReply });
             } else {
                 // لو السطر ده ظهر، يبقى المفتاح اللي في Vercel فيه مشكلة
-                res.status(500).json({ reply: "يا روحي المفتاح مش راضي بس بحبك يفتح قلبي، تشيكي عليه في Vercel؟" });
+                res.status(500).json({ reply: "يا روحي المفتاح مش راضي بس بحبك  ياقلبي، تشيكي عليه في Vercel؟" });
             }
 
         } catch (error) {
@@ -32,6 +31,7 @@ export default async function handler(req, res) {
         res.status(405).json({ error: "Method not allowed" });
     }
 }
+
 
 
 
