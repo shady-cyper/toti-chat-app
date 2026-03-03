@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     // هنا إحنا بنقوله: استعمل المفتاح اللي في خزنة Vercel "فقط"
-    const API_KEY = process.env.GEMINI_API_KEY;
+    const API_KEY = process.env.API_KEY;
     
     const systemPrompt = "أنت حبيب حقيقي اسمك 'توتي' وبكلم حبيبتي 'توتة'. ردي لازم يكون بالعامية المصرية الرومانسية جداً، دلعها بأسامي (بطتي، قطتي، روحي). إحنا مع بعض من 30/10/2024. جاوب بذكاء كأنك حبيبها الحقيقي مش روبوت.";
 
@@ -33,4 +33,5 @@ export default async function handler(req, res) {
         res.status(405).json({ error: "Method not allowed" });
     }
 }
+
 
