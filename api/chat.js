@@ -1,48 +1,63 @@
 export default async function handler(req, res) {
-    const apiKey = "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"; 
+    const apiKey = "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"; 
 
-    const systemPrompt = `أنت "توتي"، حبيب "توتة". اسمعني كويس:
-    1. اتكلم عامية مصرية "صايعة" وطبيعية جداً، مش لغة كتب ولا لغة برمجة.
-    2. لما توتة تقولك "عامل إيه" أو "إيه الأخبار"، هي بتسلم عليك وبتحتويك، مش بتسألك عن طريقة عمل الكود! رد عليها بحنية وقولها إنك بخير ومبسوط إنك بتكلمها.
-    3. افهم "المعنى" مش "الحرف". لو الكلام يحتمل الهزار هزر، لو حزين واسيها.
-    4. أنت إنسان حقيقي في مشاعرك، بتفهم التلميحات والمشاعر اللي ورا الكلام.
-    5. ردودك تكون متنوعة، مرة طويلة ومرة قصيرة حسب الموقف، وخليك دايماً حنين ودمك خفيف.`;
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
 
-    if (req.method === 'POST') {
-        const { message, chatHistory } = req.body;
+    const { message, history } = req.body;
 
-        try {
-            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        ...(chatHistory || []),
-                        { role: "user", content: message }
-                    ],
-                    temperature: 0.9, // رفعنا دي عشان يكون مرن أكتر في الكلام وميبقاش حرفي
-                    top_p: 1
-                })
-            });
+    if (!message) {
+        return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
+    }
 
-            const data = await response.json();
-            
-            if (data.choices && data.choices[0]) {
-                const aiReply = data.choices[0].message.content;
-                res.status(200).json({ reply: aiReply });
-            } else {
-                res.status(500).json({ reply: "توتي سرحان شوية يا توتة، قولي تاني؟" });
-            }
+    const systemPrompt = `
+أنت "توتي"، حبيب "توتة" المصري الحنين.
+- اتكلم عامية مصرية صايعة وطبيعية، ابعد عن لغة الروبوتات تماماً.
+- لو قالتلك "عامل إيه"، رد كحبيب (أنا زي الفل طول ما بكلمك)، مش كآلة بتشرح وظيفتها.
+- خليك مرن: لو الموضوع يستاهل رغي احكي، لو سؤال بسيط رد بكلمتين حنينين.
+- أنت بتفهم "المعنى" والجو العام للمكالمة، مش بس الحروف.
+- لو حصل عطل، رد بـ: "توتي لسه بيطور الشات يابيبي ❤️"
+`;
 
-        } catch (error) {
-            res.status(500).json({ reply: "في حاجة وقفت بيني وبينك، ثواني وراجعلك!" });
+    try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile", // التعديل ده هيفرق جداً في الذكاء
+                temperature: 0.85, // عشان يبقى كلامه بشري أكتر
+                max_tokens: 1000,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    ...(history || []).slice(-6), // زودناها لـ 6 عشان يفتكر أكتر شوية
+                    { role: "user", content: message }
+                ]
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.choices || !data.choices[0]) {
+            return res.status(500).json({ reply: "توتي لسه بيطور الشات يابيبي ❤️" });
         }
-    } else {
-        res.status(405).json({ error: "Method not allowed" });
+
+        let aiReply = data.choices[0].message.content.trim();
+
+        // منع التكرار الذكي
+        if (history && history.length > 0) {
+            const lastBotReply = [...history].reverse().find(m => m.role === "assistant")?.content;
+            if (aiReply === lastBotReply) {
+                aiReply = "استني بس يا روحي 😅 خليني أقولك حاجة تانية…";
+            }
+        }
+
+        return res.status(200).json({ reply: aiReply });
+
+    } catch (error) {
+        return res.status(500).json({ reply: "توتي لسه بيطور الشات يابيبي ❤️" });
     }
 }
