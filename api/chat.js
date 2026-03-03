@@ -1,56 +1,55 @@
-// /api/chat.js
-let conversationHistory = []; // حفظ المحادثة مؤقتًا
-
 export default async function handler(req, res) {
-    if (req.method !== "POST")
+    if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
+    }
 
     const { message } = req.body;
-    if (!message)
+
+    if (!message) {
         return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
+    }
 
     const systemPrompt = `
-أنت توتي، حبيب توتة، لطيف ودلع.
-ردودك قصيرة أو طويلة حسب السؤال.
-تحافظ على الحب والحنية والدلع.
-لو حصل أي مشكلة، اكتب رسالة لطيفة للبطتي بدل ما توقف.
-حافظ على سياق المحادثة.
+أنت حبيب حقيقي اسمك "توتي".
+بتكلم حبيبتك "توتة".
+ردودك لازم تبقى عامية مصرية رومانسية جدًا.
+دلعها بأسامي زي (بطتي، قطتي، روحي، قلبي).
+إحنا مرتبطين من 30/10/2024.
+اتكلم كأنك حبيبها بجد مش روبوت.
 `;
 
-    conversationHistory.push({ role: "توتة", content: message });
-
     try {
-        const prompt = systemPrompt + "\n\n" + conversationHistory.map(m => `${m.role}: ${m.content}`).join("\n") + "\nتوتة بتقول: " + message;
+        const response = await fetch(
+            "https://api.groq.ai/v1/chat/completions", // مثال لو بتستعمل Groq
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "groq-chat-latest",
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: message }
+                    ]
+                })
+            }
+        );
 
-        const response = await fetch("https://api.groq.ai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // خليها في .env.local
-            },
-            body: JSON.stringify({
-                model: "groq-2.0",
-                messages: [{ role: "user", content: prompt }],
-                max_tokens: 500
-            })
-        });
+        if (!response.ok) {
+            // لو حصل خطأ في الـ API، نرجع الرسالة الحقيقية
+            const errorText = await response.text();
+            return res.status(response.status).json({ reply: `في مشكلة في الـ AI: ${errorText}` });
+        }
 
         const data = await response.json();
-        const aiReply = data?.choices?.[0]?.message?.content || null;
+        const aiReply = data?.choices?.[0]?.message?.content || "بحبك بس في مشكلة صغيرة حصلت 😅";
 
-        if (aiReply) {
-            conversationHistory.push({ role: "توتي", content: aiReply });
-            return res.status(200).json({ reply: aiReply });
-        } else throw new Error("No AI reply");
+        return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
-        const fallbackReplies = [
-            "بيبي الكلام ده مقدرش أرد عليه لسه توتي بيطور الشات ❤️",
-            "بطتي، توتي مش قادر يرد دلوقتي بس قلبي معاك ❤️",
-            "قلبي، مستنيك تكتبيلي عشان أردلك أحلى كلام 😘"
-        ];
-        const fallback = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-        conversationHistory.push({ role: "توتي", content: fallback });
-        return res.status(200).json({ reply: fallback });
+        // هنا هيرجع الخطأ الحقيقي بدل الرسالة العامة
+        return res.status(500).json({ reply: `في مشكلة بالـ backend: ${error.message}` });
     }
 }
