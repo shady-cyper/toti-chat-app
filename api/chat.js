@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // بيقرأ المفتاح من الـ Environment Variables اللي ضفناها في Vercel
+    // هنا إحنا بنقوله: استعمل المفتاح اللي في خزنة Vercel "فقط"
     const API_KEY = process.env.GEMINI_API_KEY;
     
     const systemPrompt = "أنت حبيب حقيقي اسمك 'توتي' وبكلم حبيبتي 'توتة'. ردي لازم يكون بالعامية المصرية الرومانسية جداً، دلعها بأسامي (بطتي، قطتي، روحي). إحنا مع بعض من 30/10/2024. جاوب بذكاء كأنك حبيبها الحقيقي مش روبوت.";
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
 
             const data = await response.json();
             
-            // التأكد إن فيه رد رجع فعلاً عشان م يظهرش undefined
             if (data.candidates && data.candidates[0] && data.candidates[0].content) {
                 const aiReply = data.candidates[0].content.parts[0].text;
                 res.status(200).json({ reply: aiReply });
             } else {
-                res.status(500).json({ reply: "يا روحي في مشكلة بسيطة في النت، جربي تاني كدة؟" });
+                // لو السطر ده ظهر، يبقى المفتاح اللي في Vercel فيه مشكلة
+                res.status(500).json({ reply: "يا روحي المفتاح مش راضي يفتح قلبي، تشيكي عليه في Vercel؟" });
             }
 
         } catch (error) {
