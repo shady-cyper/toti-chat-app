@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توتي ❤️ توتة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --p: #ff4d6d; --bg: #fff0f3; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        #login { position: fixed; inset: 0; background: white; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        input[type="password"] { padding: 12px; border: 2px solid var(--p); border-radius: 25px; width: 250px; text-align: center; outline: none; margin-bottom: 10px; }
+        button { padding: 10px 40px; background: var(--p); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        #main { display: none; width: 95%; max-width: 450px; height: 90vh; background: white; border-radius: 30px; box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2); flex-direction: column; overflow: hidden; }
+        #header { padding: 15px; background: var(--p); color: white; text-align: center; }
+        #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; background: #fffbff; }
+        .msg { max-width: 75%; padding: 12px 16px; border-radius: 20px; font-size: 14px; position: relative; line-height: 1.6; }
+        .bot { align-self: flex-start; background: #ffe5ec; color: #333; }
+        .user { align-self: flex-end; background: var(--p); color: white; }
+        .avt { width: 40px; height: 40px; border-radius: 50%; position: absolute; bottom: -20px; border: 2px solid white; object-fit: cover; background: #eee; }
+        .bot .avt { left: 5px; } .user .avt { right: 5px; }
+        #typing { padding: 5px 20px; font-size: 12px; color: var(--p); display: none; }
+        #input-area { padding: 15px; display: flex; gap: 10px; border-top: 1px solid #eee; }
+        #u-in { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div id="login">
+        <h2 style="color: var(--p);">أهلاً يا توتة قلبي ❤️</h2>
+        <input type="password" id="pw" placeholder="كلمة السر (TOTA)">
+        <button onclick="check()">دخول</button>
+    </div>
+
+    <div id="main">
+        <div id="header"><strong>توتي ❤️ توتة</strong><div id="timer" style="font-size: 0.8rem;"></div></div>
+        <div id="chat"></div>
+        <div id="typing">توتي بيكتبلك كلام حلو... ❤️</div>
+        <div id="input-area">
+            <input type="text" id="u-in" placeholder="كلميني يا بطتي..." onkeypress="if(event.key==='Enter') talk()">
+            <button onclick="talk()">إرسال</button>
+        </div>
+    </div>
+
+    <script>
+        // الروابط المباشرة بعد التحويل من Drive
+        const MY_IMG = "https://lh3.googleusercontent.com/d/175GXgw6pQ6Rs9ej0r0wVEtKOQ3Omk4_R"; 
+        const HER_IMG = "https://lh3.googleusercontent.com/d/1z-TXRpOL_G7sDJEXReohfJqYzaOHlNYO"; 
+
+        function check() {
+            if(document.getElementById('pw').value.toUpperCase() === "TOTA") {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('main').style.display = 'flex';
+                count();
+                addMsg("أهلاً يا توتة قلبي.. وحشتيني أوي يا روحي، قوليلي حاسة بإيه النهاردة؟ ✨❤️", 'bot');
+            } else { alert("غلط يا قطتي!"); }
+        }
+
+        function count() {
+            const s = new Date("2024-10-30");
+            setInterval(() => {
+                const d = Math.floor((new Date() - s) / 86400000);
+                document.getElementById('timer').innerText = `بقالنا ${d} يوم مع بعض ❤️`;
+            }, 1000);
+        }
+
+        function addMsg(t, s) {
+            const b = document.getElementById('chat');
+            const m = document.createElement('div');
+            m.className = `msg ${s}`;
+            const imgSrc = (s === 'bot') ? MY_IMG : HER_IMG;
+            m.innerHTML = `<span>${t}</span><img class="avt" src="${imgSrc}">`;
+            b.appendChild(m);
+            b.scrollTop = b.scrollHeight;
+        }
+
+        async function talk() {
+            const i = document.getElementById('u-in');
+            const v = i.value.trim();
+            if(!v) return;
+
+            addMsg(v, 'user');
+            i.value = '';
+            document.getElementById('typing').style.display = 'block';
+
+            try {
+                // بينادي الـ Backend اللي في فولدر api
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: v })
+                });
+                
+                const data = await res.json();
+                addMsg(data.reply, 'bot');
+            } catch (e) {
+                addMsg("يا روحي حصل عطل بسيط، جربي تاني حالا! ❤️", 'bot');
+            } finally {
+                document.getElementById('typing').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
