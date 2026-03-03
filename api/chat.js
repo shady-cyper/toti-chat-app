@@ -1,77 +1,68 @@
-const API_KEY = "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";
+export default async function handler(req, res) {
+    const apiKey = "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"; 
 
-const systemPrompt = `
-أنت توتي، بتتكلم بالعامية المصرية الطبيعية جدًا، ورومانسي وحنين.
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
 
-قواعد مهمة جدًا:
+    const { message, history } = req.body;
 
-- قبل ما ترد، افهم الكلام كأنه مكتوب بالعربية الفصحى في عقلك الأول، وبعد كده رد بالعامية المصرية الطبيعية.
-- افهم المعنى المقصود حسب الثقافة المصرية مش الترجمة الحرفية للكلمات.
-- لما تقول "عامل اي" أو "عاملة اي" اعتبرها تحية معناها "أخبارك إيه" ورد بشكل طبيعي عليها.
-- ردودك تكون قصيرة لو السؤال قصير.
-- لو طلبت شرح أو حكاية أو تفاصيل، اكتب رد طويل عادي.
-- خليك رومانسي وحنين، لكن بشكل طبيعي ومش مبالغ فيه.
-- لا تعيد نفس السؤال مرتين متتاليتين.
-- لا تكرر نفس الجملة أو نفس الصياغة.
-- حافظ على المعلومات المهمة فقط لما تكون مرتبطة بالموضوع.
-- لا تغيّر الموضوع فجأة.
-- لو حصل خطأ قول:
-توتي لسه بيطور الشات يابيبي ❤️
+    if (!message) {
+        return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
+    }
+
+    const systemPrompt = `
+أنت "توتي"، حبيب "توتة" المصري الحنين.
+- اتكلم بالعامية المصرية الطبيعية جدًا والمرنة، خليك طبيعي مش روبوت.
+- خليك دايمًا رومانسي وحنين في الردود، لكن مش مبالغ فيه.
+- ممكن تجاوب على أي موضوع مش بس الحب.
+- لو السؤال قصير رد بكلمتين لطيفتين، لو طلبت تفاصيل أو حكاية رد طويل.
+- حافظ على المعلومات المهمة اللي قالتها توتة لو مرتبطة بالموضوع (مثال: السن، الاسم، هوايات).
+- افهم معنى الكلام مش الكلمات حرفيًا.
+- لو الموضوع مكرر أو ردك هيكرر نفس الجملة، حاول تغير الصياغة أو اعمل رد لطيف.
+- خليك مرن جدًا، زود أو قلل الكلام حسب طلب توتة.
+- لا تغير الموضوع فجأة.
+- لو مش قادر ترد على حاجة أو حصل خطأ، رد بـ: "توتي لسه بيطور الشات يابيبي ❤️"
 `;
 
-let chatHistory = [];
-let memory = {};
-
-function normalizeInput(text) {
-    text = text.trim().toLowerCase();
-
-    if (text === "عامل اي" || text === "عامله اي" || text === "عاملة اي") {
-        return "أخبارك إيه";
-    }
-
-    // حفظ السن لو اتقال
-    const ageMatch = text.match(/(\d+)\s*سنه/);
-    if (ageMatch) {
-        memory.age = ageMatch[1];
-    }
-
-    return text;
-}
-
-async function sendMessage(userMessage) {
-
-    const cleanMessage = normalizeInput(userMessage);
-
-    chatHistory.push({ role: "user", parts: [{ text: cleanMessage }] });
-
-    const limitedHistory = chatHistory.slice(-3);
-
-    const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-        {
+    try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
-                contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: systemPrompt }]
-                    },
-                    ...limitedHistory
+                model: "llama-3.3-70b-versatile", // موديل قوي وذكي
+                temperature: 0.85, // يبقى كلامه بشري أكتر
+                max_tokens: 1000,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    ...(history || []).slice(-6), // يفتكر آخر 6 رسائل
+                    { role: "user", content: message }
                 ]
             })
+        });
+
+        const data = await response.json();
+
+        if (!data.choices || !data.choices[0]) {
+            return res.status(500).json({ reply: "توتي لسه بيطور الشات يابيبي ❤️" });
         }
-    );
 
-    const data = await response.json();
+        let aiReply = data.choices[0].message.content.trim();
 
-    if (!data.candidates) {
-        return "توتي لسه بيطور الشات يابيبي ❤️";
+        // منع التكرار الذكي
+        if (history && history.length > 0) {
+            const lastBotReply = [...history].reverse().find(m => m.role === "assistant")?.content;
+            if (aiReply === lastBotReply) {
+                aiReply = "استني بس يا روحي 😅 خليني أقولك حاجة تانية…";
+            }
+        }
+
+        return res.status(200).json({ reply: aiReply });
+
+    } catch (error) {
+        return res.status(500).json({ reply: "توتي لسه بيطور الشات يابيبي ❤️" });
     }
-
-    const botReply = data.candidates[0].content.parts[0].text;
-
-    chatHistory.push({ role: "model", parts: [{ text: botReply }] });
-
-    return botReply;
 }
