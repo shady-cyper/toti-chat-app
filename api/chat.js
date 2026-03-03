@@ -12,8 +12,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: systemPrompt + "\n البنت بتقول: " + message }] }]
-                })
+        contents: [{ role: "user", parts: [{ text: systemPrompt + "\n الرسالة: " + message }] }]
             });
 
             const data = await response.json();
@@ -33,6 +32,7 @@ export default async function handler(req, res) {
         res.status(405).json({ error: "Method not allowed" });
     }
 }
+
 
 
 
