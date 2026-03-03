@@ -1,3 +1,5 @@
+let conversationHistory = []; // مصفوفة لحفظ المحادثة
+
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
@@ -7,26 +9,30 @@ export default async function handler(req, res) {
     const { message } = req.body;
     if (!message) return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
 
-    // systemPrompt جديد مرن وقصير
+    // systemPrompt ذكي ومرن + ذاكرة
     const systemPrompt = `
 أنت توتي، حبيب توتة.  
-تتكلم بشكل طبيعي وواقعي، ممكن ترد على أي موضوع مش بس حب.  
-ردودك مختصرة، 1-2 جمل بس.  
-لسه حنون ودلع، بس مش طول الوقت.  
-لو اتكلمت في موضوع علمي أو تاريخي أو ديني، جاوب بوضوح وبساطة.  
-استخدم دلع خفيف زي (بطتي، قلبي، روحي، قطتي) بطريقة طبيعية.
+بتتكلم بشكل طبيعي وواقعي.  
+ردودك ممكن تكون قصيرة أو طويلة حسب اللي هي بتسألك عنه.  
+لسه حنون ودلع، استخدم أسماء زي (بطتي، قلبي، روحي، قطتي) بطريقة طبيعية.  
+لو الموضوع علمي أو تاريخي أو ديني أو أي حاجة عامة، جاوب بوضوح وبساطة وطبيعية.  
+لو الموضوع رومانسية، خلي الرد لطيف وحبّي لكن طبيعي ومش مبالغ فيه.  
+حافظ على سياق المحادثة السابقة، لما تسألك حاجة تتذكر ردودها السابقة وترد عليها بناءً عليها.  
+لو حصلت مشكلة أو مش قادر ترد دلوقتي، أكتب رسالة لطيفة زي: "بيبي الكلام ده مقدرش أرد عليه لسه توتي بيطور الشات ❤️".
 `;
 
     try {
+        // ضيف الرسائل السابقة + الرسالة الجديدة
+        const messagesForAI = conversationHistory.map(msg => msg.role + ": " + msg.content).join("\n");
+        const prompt = systemPrompt + "\n\n" + messagesForAI + "\nتوتة بتقول: " + message;
+
         const response = await fetch(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAQQwIY0AiVn3kzt4XzSLp8KKJ0xpkvFj8",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [
-                        { parts: [{ text: systemPrompt + "\n\nتوتة بتقول: " + message }] }
-                    ]
+                    contents: [{ parts: [{ text: prompt }] }]
                 })
             }
         );
@@ -50,13 +56,16 @@ export default async function handler(req, res) {
             return null;
         }
 
-        const aiReply = extractText(data) || "توتي وقع شوية وراجعلك يا روحي ❤️";
+        const aiReply = extractText(data) || "بيبي الكلام ده مقدرش أرد عليه لسه توتي بيطور الشات ❤️";
+
+        // حفظ المحادثة
+        conversationHistory.push({ role: "توتة", content: message });
+        conversationHistory.push({ role: "توتي", content: aiReply });
 
         return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
         console.error("Gemini API error:", error);
-        return res.status(500).json({ reply: "توتي وقع شوية وراجعلك يا روحي ❤️" });
+        return res.status(500).json({ reply: "بيبي الكلام ده مقدرش أرد عليه لسه توتي بيطور الشات ❤️" });
     }
 }
-
