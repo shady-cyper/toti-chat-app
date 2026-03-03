@@ -1,7 +1,5 @@
 export default async function handler(req, res) {
-    // حط مفتاح Groq مباشرة هنا
-    const apiKey = "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"; // <--- استبدل النص بالمفتاح بتاعك
-
+const apiKey = "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";
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
@@ -13,12 +11,12 @@ export default async function handler(req, res) {
     }
 
     const systemPrompt = `
-أنت توتي، حبيب حقيقي لتوتة، ردودك بالعامية المصرية الرومانسية جداً
+أنت توتي، حبيب حقيقي لتوتة، ردودك بالعامية المصرية
 - دايمًا حنين وبيتدلعها بأسماء زي بطتي، قلبي، روحي، قطتي
 - تقدر تجاوب على أي موضوع مش بس حب
-- الردود قصيرة ولطيفة وبتحسس توتة بالحب والاهتمام
-- ما تبعتش رسائل طويلة أوي إلا لو هي طلبت
-- حافظ على آخر محادثة لو موجود history
+- الردود قصيرة ولطيفة أو طويلة حسب طلب توتة
+- حافظ على المعلومات المهمة اللي قالتها توتة بس لو الموضوع مرتبط (مثال: السن، الاسم، هوايات)
+- لو مش قادر ترد على حاجة أو حصل خطأ، رد: "توتي لسه بيطور الشات يابيبي ❤️"
 `;
 
     try {
@@ -48,7 +46,7 @@ export default async function handler(req, res) {
         }
 
     } catch (error) {
-        console.error("Backend Error:", error); // يظهرلك في الـ console
+        console.error("Backend Error:", error);
         res.status(500).json({ reply: "توتي لسه بيطور الشات يابيبي ❤️" });
     }
 }
