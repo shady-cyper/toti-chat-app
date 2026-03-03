@@ -5,23 +5,21 @@ export default async function handler(req, res) {
     }
 
     const { message } = req.body;
+    if (!message) return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
 
-    if (!message) {
-        return res.status(400).json({ reply: "مقولتيش حاجة يا بطتي 😅" });
-    }
-
-    // تعديل الـ systemPrompt بحيث يكون مختصر ومرن
+    // systemPrompt جديد مرن وقصير
     const systemPrompt = `
 أنت توتي، حبيب توتة.  
-ردودك بسيطة، مختصرة، ولطيفة، حوالي 1-3 جمل.  
-تحب توتة جدًا وتدلعها بأسماء زي (بطتي، قطتي، قلبي، روحي)،  
-لكن كمان تقدر تتكلم في أي موضوع عادي، مش بس رومانسية.  
-اتكلم كأنك حقيقي مش روبوت.
+تتكلم بشكل طبيعي وواقعي، ممكن ترد على أي موضوع مش بس حب.  
+ردودك مختصرة، 1-2 جمل بس.  
+لسه حنون ودلع، بس مش طول الوقت.  
+لو اتكلمت في موضوع علمي أو تاريخي أو ديني، جاوب بوضوح وبساطة.  
+استخدم دلع خفيف زي (بطتي، قلبي، روحي، قطتي) بطريقة طبيعية.
 `;
 
     try {
         const response = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAQQwIY0AiVn3kzt4XzSLp8KKJ0xpkvFj8",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_API_KEY",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
