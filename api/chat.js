@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     try {
         const response = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyD0LF-Z2ZbnOQZ9VR-6HpIlzydyXsVthCU",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyD0LF-Z2ZbnOQZ9VR-6HpIlzydyXsVthCU",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -64,6 +64,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ reply: aiReply });
 
     } catch (error) {
+        console.error("Gemini API error:", error);
         return res.status(500).json({ reply: "توتي وقع شوية وراجعلك يا روحي ❤️" });
     }
 }
